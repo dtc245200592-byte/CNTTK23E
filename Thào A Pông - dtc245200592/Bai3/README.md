@@ -3,7 +3,7 @@
 
 - **Học phần:** Phát triển ứng dụng phân tán
 - **Giảng viên hướng dẫn:** TS. Dương Thu Mây (Email: dtmay@ictu.edu.vn - ĐT: 0989086222)
-- **Sinh viên thực hiện:** Thào A Póng
+- **Sinh viên thực hiện:** Thào A Pông
 - **Mã sinh viên:** DTC245200592
 - **Lớp:** CNTT K23E
 - **Trường Đại học Công nghệ Thông tin và Truyền thông (ICTU) - Đại học Thái Nguyên**
@@ -45,7 +45,7 @@
 ## 2. Cấu trúc thư mục dự án
 
 ```
-Thào A Póng - dtc245200592/
+Thào A Pông - dtc245200592/
 └── Bai3/
     ├── README.md
     ├── anh/
@@ -237,7 +237,7 @@ Tệp `RealtimeSubmissionSystem/requests.http` chứa đầy đủ 9 ca kiểm t
    - Ưu tiên 3: `Long Polling` (máy khách giữ kết nối HTTP chờ dữ liệu).
 5. **Vì sao tạo nhóm `submission:{id}` thay vì gửi tất cả (`Clients.All`)?**
    - *Bảo mật & Riêng tư:* Ngăn sinh viên này nhìn thấy bài chấm và kết quả của sinh viên khác.
-   - *Hiệu năng & Băng thông:* Nếu có 10.000 sinh viên, gửi `All` sẽ tạo ra $10.000 \times 2 = 20.000$ thông điệp qua mạng; trong khi nhóm chỉ gửi đúng 2 thông điệp đến người nộp.
+   - *Hiệu năng & Băng thông:* Nếu có 10.000 sinh viên, gửi `All` sẽ tạo ra 10.000 x 2 = 20.000 thông điệp qua mạng; trong khi nhóm chỉ gửi đúng 2 thông điệp đến người nộp.
 6. **`IHubContext` cho phép làm gì?**
    - Cho phép gửi thông điệp tới client từ các thành phần nằm ngoài lớp Hub (chẳng hạn như Controller, Minimal API endpoint, BackgroundService worker).
 7. **`On<T>` dùng để làm gì? Bỏ đi thì sao?**
