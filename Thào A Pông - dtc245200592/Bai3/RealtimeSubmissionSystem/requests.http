@@ -1,0 +1,56 @@
+@host = http://localhost:5000
+
+### 1. GET / - Kiểm tra trạng thái máy chủ đang chạy
+# Mong đợi: 200 OK, body: {"service":"Submission.RealtimeApi","status":"running"}
+GET {{host}}/
+
+### 2. GET /api/assignments - Lấy danh sách bài tập
+# Mong đợi: 200 OK, body danh sách các bài tập
+GET {{host}}/api/assignments
+
+### 3. POST /api/assignments/1/submissions - Tạo lượt nộp bài hợp lệ
+# Mong đợi: 201 Created + header Location, body có id, status="received"
+# @name createSubmission
+POST {{host}}/api/assignments/1/submissions
+Content-Type: application/json
+
+{
+  "studentCode": "SV001",
+  "repositoryUrl": "https://example.com/sv001/signalr"
+}
+
+### 4. GET /api/submissions/{id} - Đọc chi tiết lượt nộp theo Id (Nguồn sự thật)
+# Mong đợi: 200 OK, trạng thái đổi dần: received -> processing (sau 1s) -> graded (sau 3s)
+GET {{host}}/api/submissions/{{createSubmission.response.body.$.id}}
+
+### 5. POST /api/assignments/1/submissions - Thiếu thông tin (studentCode để trống)
+# Mong đợi: 400 Bad Request, mã lỗi INVALID_SUBMISSION
+POST {{host}}/api/assignments/1/submissions
+Content-Type: application/json
+
+{
+  "studentCode": "",
+  "repositoryUrl": "https://example.com/sv001/signalr"
+}
+
+### 6. POST /api/assignments/999/submissions - Nộp cho bài tập không tồn tại
+# Mong đợi: 404 Not Found, mã lỗi ASSIGNMENT_NOT_FOUND
+POST {{host}}/api/assignments/999/submissions
+Content-Type: application/json
+
+{
+  "studentCode": "SV001",
+  "repositoryUrl": "https://example.com/sv001/signalr"
+}
+
+### 7. GET /api/submissions/{id} - Đọc lượt nộp với Id không tồn tại
+# Mong đợi: 404 Not Found, mã lỗi SUBMISSION_NOT_FOUND
+GET {{host}}/api/submissions/00000000-0000-0000-0000-000000000000
+
+### 8. POST /hubs/submissions/negotiate - Bắt tay SignalR (Negotiate)
+# Mong đợi: 200 OK, trả về connectionId, connectionToken và danh sách availableTransports
+POST {{host}}/hubs/submissions/negotiate?negotiateVersion=1
+
+### 9. POST /hub/submissions/negotiate - Sai đường dẫn hub (thiếu chữ 's')
+# Mong đợi: 404 Not Found (MapHub định tuyến ở /hubs/submissions)
+POST {{host}}/hub/submissions/negotiate?negotiateVersion=1
