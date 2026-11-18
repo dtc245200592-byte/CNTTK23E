@@ -13,7 +13,7 @@
 ## MỤC LỤC
 1. [Trả lời 3 câu hỏi đầu giờ](#1-trả-lời-3-câu-hỏi-đầu-giờ)
 2. [Cấu trúc thư mục dự án](#2-cấu-trúc-thư-mục-dự-án)
-3. [Phần 1: Dự án PingSignalR (7 bước hoàn chỉnh)](#3-phần-1-dự-án-pingsignalr-7-bước-hoàn-chỉnh)
+3. [Phần 1: Dự án PingSignalR (7 bước kèm ảnh minh chứng)](#3-phần-1-dự-án-pingsignalr-7-bước-kèm-ảnh-minh-chứng)
 4. [Phần 2: Dự án EduSubmit Realtime (RealtimeSubmissionSystem)](#4-phần-2-dự-án-edusubmit-realtime-realtimesubmissionsystem)
 5. [Phần 3: Bảng 5 thí nghiệm phân tán (Bước 7)](#5-phần-3-bảng-5-thí-nghiệm-phân-tán-bước-7)
 6. [Phần 4: Kiểm tra 9 ca trong requests.http](#6-phần-4-kiểm-tra-9-ca-trong-requestshttp)
@@ -48,15 +48,20 @@
 Thào A Póng - dtc245200592/
 └── Bai3/
     ├── README.md
+    ├── anh/
+    │   ├── buoc1-build.png
+    │   ├── buoc2-negotiate.png
+    │   ├── buoc4-echo.png
+    │   ├── buoc5-nhom.png
+    │   ├── buoc6-noilai.png
+    │   ├── buoc7-loi1.png
+    │   ├── buoc7-loi2.png
+    │   ├── buoc7-loi3.png
+    │   ├── edusubmit-client.png
+    │   └── edusubmit-failed.png
     ├── PingSignalR/
     │   ├── PingSignalR.slnx
     │   ├── .gitignore
-    │   ├── anh/
-    │   │   ├── buoc1-build.png
-    │   │   ├── buoc2-negotiate.png
-    │   │   ├── buoc4-echo.png
-    │   │   ├── buoc5-nhom.png
-    │   │   └── buoc6-noilai.png
     │   └── src/
     │       ├── Ping.Api/
     │       │   ├── Ping.Api.csproj
@@ -80,7 +85,7 @@ Thào A Póng - dtc245200592/
 
 ---
 
-## 3. Phần 1: Dự án PingSignalR (7 bước hoàn chỉnh)
+## 3. Phần 1: Dự án PingSignalR (7 bước kèm ảnh minh chứng)
 
 ### Hợp đồng giao tiếp (Hub Contract)
 | Phía gọi | Tên phương thức / Thông điệp | Phạm vi gửi | Ý nghĩa |
@@ -97,38 +102,57 @@ Thào A Póng - dtc245200592/
 3. **`Clients.Group(groupName)`**: Chỉ gửi tới những client đã tham gia vào nhóm `groupName` thông qua `Groups.AddToGroupAsync`.
 4. **`Clients.Client(connectionId)`**: Gửi trực tiếp tới một kết nối cụ thể bằng ID.
 
-### Kết quả chạy kiểm tra PingSignalR
-- **Máy chủ (Ping.Api - Cổng 5200):**
-```text
-info: Microsoft.Hosting.Lifetime[14]
-      Now listening on: http://localhost:5200
-[Hub] + F_c1cQxP ket noi
-[Hub] - F_c1cQxP ngat
-```
+---
 
-- **Máy khách An (Ping.Client):**
-```text
-An da ket noi den PingApi. ConnectionId: F_c1cQxP
-[System] Client F_c1cQxP da ket noi.
-[Echo] Echo: Xin chao SignalR tu An
-[Group] F_c1cQxP da tham gia nhom lop-hoc-01
-[Group] Thong bao nhom tu An
-Dang cho thong diep... Nhan Enter de thoat.
-[Broadcast] Xin chao tat ca tu An
-[Lifecycle] Ket noi da dong.
-```
+### Ảnh minh chứng từng bước của PingSignalR
 
-- **Thí nghiệm 3 lỗi thường gặp (Bước 7 PingSignalR):**
-  1. *Máy chủ chưa chạy:* Khi client gọi `connection.StartAsync()`, client ném ngoại lệ `HttpRequestException: Connection refused (localhost:5200)`. Bài học: `WithAutomaticReconnect` chỉ khôi phục kết nối đã từng thành công, không cứu được lần kết nối đầu tiên.
-  2. *Sai đường dẫn Hub (`/hub/ping` thay vì `/hubs/ping`):* Bắt tay trả về `404 Not Found` ngay ở bước negotiate. Bài học: Đường dẫn `WithUrl` phải khớp tuyệt đối với `MapHub`.
-  3. *Sai tên thông điệp (`On("EchoRespone")` thay vì `On("EchoResponse")`):* Không có ngoại lệ nào, chương trình chạy bình thường nhưng client không in gì. Bài học: Sai tên ở chiều gửi xuống thì máy khách im lặng bỏ qua, cần so sánh tên hai phía từng ký tự.
+#### Bước 1: Khởi tạo solution và kiểm tra build
+![buoc1-build](anh/buoc1-build.png)
+- **Thấy:** `Build succeeded` với 0 Warning, 0 Error.
+- **Giải thích:** Tạo solution `PingSignalR`, project `Ping.Api` (web), `Ping.Client` (console) và cài đặt thành công package `Microsoft.AspNetCore.SignalR.Client` phiên bản `10.0.15`.
+
+#### Bước 2: Bắt tay negotiate
+![buoc2-negotiate](anh/buoc2-negotiate.png)
+- **Thấy:** `curl.exe` gọi `POST /hubs/ping/negotiate?negotiateVersion=1` trả về mã 200 kèm `connectionId` và danh sách 3 cơ chế truyền tải: `WebSockets`, `ServerSentEvents`, `LongPolling`.
+- **Giải thích:** Bước bắt tay giúp máy khách và máy chủ thỏa thuận phiên bản giao thức và chọn kênh truyền tải tối ưu nhất.
+
+#### Bước 3 & 4: Máy khách gọi Echo
+![buoc4-echo](anh/buoc4-echo.png)
+- **Thấy:** Máy khách An kết nối thành công và nhận được dòng phản hồi `[Echo] Echo: Xin chao SignalR tu An`.
+- **Giải thích:** Hub xử lý phương thức `Echo` và sử dụng `Clients.Caller.SendAsync("EchoResponse", ...)` để trả lời riêng cho máy khách vừa gọi.
+
+#### Bước 5: Phát rộng và Nhóm
+![buoc5-nhom](anh/buoc5-nhom.png)
+- **Thấy:** Terminal của An và Bình đều thấy tin `[Group]` và `[Broadcast]` của nhau khi cùng ở trong nhóm `lop-hoc-01`, nhưng An không nhận tin `[Echo]` riêng của Bình.
+- **Giải thích:** Phân tách rõ ràng giữa phạm vi gửi `Clients.Group` (chỉ thành viên nhóm), `Clients.All` (toàn bộ kết nối) và `Clients.Caller` (chỉ người gọi).
+
+#### Bước 6: Vòng đời kết nối và tự động kết nối lại
+![buoc6-noilai](anh/buoc6-noilai.png)
+- **Thấy:** Khi máy chủ bị dừng tạm thời và bật lại, máy khách tự động bắt sự kiện `[Lifecycle] Dang ket noi lai...` và khôi phục `[Lifecycle] Da ket noi lai: FlTOOZp8`.
+- **Giải thích:** `WithAutomaticReconnect()` kích hoạt lịch thử lại mặc định (sau 0s, 2s, 10s, 30s) và cấp `ConnectionId` mới sau khi tái kết nối.
+
+#### Bước 7: Ba thí nghiệm lỗi điển hình
+- **Lỗi 1: Máy chủ chưa chạy**
+  ![buoc7-loi1](anh/buoc7-loi1.png)
+  *Hiện tượng:* Ném ngoại lệ `HttpRequestException: Connection refused (localhost:5200)` ngay khi gọi `StartAsync()`.
+  *Bài học:* `WithAutomaticReconnect` chỉ khôi phục kết nối đã mở, không thể cứu kết nối ban đầu nếu máy chủ chưa bật.
+
+- **Lỗi 2: Sai đường dẫn hub (`/hub/ping` thiếu `s`)**
+  ![buoc7-loi2](anh/buoc7-loi2.png)
+  *Hiện tượng:* Báo lỗi `404 Not Found` ở bước negotiate.
+  *Bài học:* Tuyến đường trong `WithUrl` phải khớp chính xác tuyệt đối với `app.MapHub<PingHub>("/hubs/ping")`.
+
+- **Lỗi 3: Sai tên thông điệp (`EchoRespone` thiếu `s`)**
+  ![buoc7-loi3](anh/buoc7-loi3.png)
+  *Hiện tượng:* Ứng dụng chạy bình thường, không báo lỗi ngoại lệ nhưng máy khách hoàn toàn không in ra dòng `[Echo]`.
+  *Bài học:* Sai tên thông điệp ở chiều gửi xuống (Server -> Client) sẽ bị bỏ qua trong im lặng. Luôn phải đối chiếu bảng hợp đồng tên sự kiện giữa 2 phía.
 
 ---
 
 ## 4. Phần 2: Dự án EduSubmit Realtime (RealtimeSubmissionSystem)
 
 ### Bản thiết kế kênh thời gian thực theo khung 4 câu hỏi
-1. **Sự kiện nào?** Sự kiện trạng thái lượt nộp bài thay đổi trên máy chủ: `received` -> `processing` -> `graded` (hoặc `failed`).
+1. **Sự kiện nào?** Trạng thái lượt nộp bài thay đổi trên máy chủ: `received` -> `processing` -> `graded` (hoặc `failed`).
 2. **Gửi cho ai?** Gửi riêng cho nhóm theo dõi bài nộp đó: `Clients.Group("submission:{id}")`.
 3. **Gửi kèm gì?** Dữ liệu DTO tối thiểu để cập nhật giao diện:
    ```csharp
@@ -136,31 +160,18 @@ Dang cho thong diep... Nhan Enter de thoat.
    ```
 4. **Mất kết nối thì sao?** Máy khách gọi lại endpoint REST `GET /api/submissions/{id}` để đọc trạng thái chính xác nhất được lưu trữ trên máy chủ.
 
-### Kết quả chạy máy khách EduSubmit (đúng chuẩn 8 dòng)
-Khi chạy lệnh:
-```powershell
-dotnet run --project src/Submission.RealtimeClient -- http://localhost:5000 SV001
-```
-
-Kết quả hiển thị trên Terminal máy khách:
-```text
-Da ket noi SignalR.
-Chon bai tap: 1 - Bai tap SignalR
-Da tao luot nop: b069c46c-1c7a-40f9-9a18-fb0ea8e0b358
-Trang thai REST ban dau: received
-Dang cho thong bao trang thai tu may chu...
-Thong bao SignalR: b069c46c-1c7a-40f9-9a18-fb0ea8e0b358 -> processing luc 03:02:00
-Thong bao SignalR: b069c46c-1c7a-40f9-9a18-fb0ea8e0b358 -> graded luc 03:02:02
-Trang thai doc lai bang REST: graded
-```
-
-Log ghi nhận trên Terminal máy chủ (Submission.RealtimeApi):
-```text
-Now listening on: http://localhost:5000
-[Hub] 8a9B1c2D theo doi submission:b069c46c-1c7a-40f9-9a18-fb0ea8e0b358
-[Push] submission:b069c46c-1c7a-40f9-9a18-fb0ea8e0b358 -> processing
-[Push] submission:b069c46c-1c7a-40f9-9a18-fb0ea8e0b358 -> graded
-```
+### Kết quả chạy máy khách EduSubmit (chuẩn 8 dòng)
+![edusubmit-client](anh/edusubmit-client.png)
+- **Thấy:** Máy khách in đầy đủ 8 dòng theo đúng chuẩn yêu cầu của giáo trình:
+  1. `Da ket noi SignalR.`
+  2. `Chon bai tap: 1 - Bai tap SignalR`
+  3. `Da tao luot nop: b069c46c-1c7a-40f9-9a18-fb0ea8e0b358`
+  4. `Trang thai REST ban dau: received`
+  5. `Dang cho thong bao trang thai tu may chu...`
+  6. `Thong bao SignalR: b069c46c-... -> processing luc ...`
+  7. `Thong bao SignalR: b069c46c-... -> graded luc ...`
+  8. `Trang thai doc lai bang REST: graded`
+- **Giải thích:** Quá trình chuyển từ `received` sang `processing` (sau 1 giây) và `graded` (sau 2 giây nữa) diễn ra hoàn toàn tự động ở máy chủ (tác vụ nền qua `IHubContext`), máy khách không hề phải polling hỏi lại. Cuối cùng, máy khách kiểm chứng lại bằng REST và tự động kết thúc.
 
 ---
 
@@ -195,6 +206,7 @@ Tệp `RealtimeSubmissionSystem/requests.http` chứa đầy đủ 9 ca kiểm t
 ## 7. Phần 5: Vận dụng nâng cao (Bài tập 2 & Bài tập 3)
 
 ### Bài tập 2: Xử lý trạng thái chấm thất bại (`failed`)
+![edusubmit-failed](anh/edusubmit-failed.png)
 - **Phía máy chủ (`Submission.RealtimeApi`):**
   Trong hàm `SimulateGradingAsync`, kiểm tra `repositoryUrl`:
   - Nếu bắt đầu bằng `https://` -> trạng thái cuối là `graded`.
@@ -202,22 +214,7 @@ Tệp `RealtimeSubmissionSystem/requests.http` chứa đầy đủ 9 ca kiểm t
 - **Phía máy khách (`Submission.RealtimeClient`):**
   Trong hàm xử lý `SubmissionStatusChanged`, nếu nhận được trạng thái `failed`, in ra thông báo cảnh báo màu đỏ:
   `!!! CANH BAO: luot nop {id} cham LOI (failed)`.
-- **Kết quả chạy kiểm thử thực tế:**
-  ```powershell
-  dotnet run --project src/Submission.RealtimeClient -- http://localhost:5000 SV002 http://example.com/sv002
-  ```
-  *Kết quả in ra:*
-  ```text
-  Da ket noi SignalR.
-  Chon bai tap: 1 - Bai tap SignalR
-  Da tao luot nop: e5efd5c2-c9f4-45ca-9068-464d18ac3a97
-  Trang thai REST ban dau: received
-  Dang cho thong bao trang thai tu may chu...
-  Thong bao SignalR: e5efd5c2-c9f4-45ca-9068-464d18ac3a97 -> processing luc 03:02:19
-  Thong bao SignalR: e5efd5c2-c9f4-45ca-9068-464d18ac3a97 -> failed luc 03:02:21
-  !!! CANH BAO: luot nop e5efd5c2-c9f4-45ca-9068-464d18ac3a97 cham LOI (failed)
-  Trang thai doc lai bang REST: failed
-  ```
+- **Kết quả chạy:** Khi nộp kho `http://example.com/sv002`, máy khách nhận thông báo `failed`, in dòng cảnh báo đỏ và REST đọc lại chốt trạng thái `failed`.
 
 ---
 
